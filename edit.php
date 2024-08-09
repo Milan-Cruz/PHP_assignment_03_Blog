@@ -34,26 +34,43 @@ if (!$post) {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate inputs
-    $title = trim($_POST['title']);
-    $content = trim($_POST['content']);
+    $command = $_POST['command'];
 
-    if (empty($title) || empty($content)) {
-        $error = 'Please fill in both title and content.';
-    } else {
-        // Update post in the database
-        $query = "UPDATE post SET title = :title, content = :content WHERE id = :id";
+    if ($command === 'Update') {
+        // Validate inputs
+        $title = trim($_POST['title']);
+        $content = trim($_POST['content']);
+
+        if (empty($title) || empty($content)) {
+            $error = 'Please fill in both title and content.';
+        } else {
+            // Update post in the database
+            $query = "UPDATE post SET title = :title, content = :content WHERE id = :id";
+            $statement = $db->prepare($query);
+            $statement->bindValue(':title', $title);
+            $statement->bindValue(':content', $content);
+            $statement->bindValue(':id', $id, PDO::PARAM_INT);
+
+            if ($statement->execute()) {
+                // Redirect to index.php after update
+                header('Location: index.php');
+                exit;
+            } else {
+                $error = "Error updating post.";
+            }
+        }
+    } elseif ($command === 'Delete') {
+        // Delete post from the database
+        $query = "DELETE FROM post WHERE id = :id";
         $statement = $db->prepare($query);
-        $statement->bindValue(':title', $title);
-        $statement->bindValue(':content', $content);
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
 
         if ($statement->execute()) {
-            // Redirect to index.php after update
+            // Redirect to index.php after deletion
             header('Location: index.php');
             exit;
         } else {
-            $error = "Error updating post.";
+            $error = "Error deleting post.";
         }
     }
 }
